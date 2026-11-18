@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meta.AI Video Downloader</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <span class="brand-dot"></span>
+          <h1>Meta.AI Video Downloader</h1>
+        </div>
+        <div class="header-badges">
+          <span id="historyCountBadge" class="status-pill status-history" title="Videos saved in Local Storage Download History">🕒 History: 0</span>
+          <span id="pageStatusBadge" class="status-pill status-idle">Ready</span>
+        </div>
+      </div>
+
+      <div class="scan-actions">
+        <button id="scanPageBtn" class="btn btn-primary" title="Scan active tab HTML & DOM for .mp4 videos">
+          <span>🔍 Scan Page HTML</span>
+        </button>
+        <button id="togglePasteDrawerBtn" class="btn btn-secondary" title="Paste raw <video> HTML source or .mp4 URLs">
+          <span>📋 Paste HTML</span>
+        </button>
+        <label class="auto-scan-toggle" title="Automatically detect new <video> tags while scrolling Meta.ai">
+          <input type="checkbox" id="autoScanCheckbox" checked />
+          <span>Auto-Scan</span>
+        </label>
+      </div>
+
+      <!-- Collapsible Raw HTML / URL Paste Box -->
+      <div id="pasteHtmlDrawer" class="paste-drawer hidden">
+        <label for="rawHtmlInput" class="drawer-label">
+          Paste <code>&lt;video src="...mp4"&gt;</code> HTML snippet or raw URLs:
+        </label>
+        <textarea
+          id="rawHtmlInput"
+          rows="3"
+          placeholder='<video class="h-full w-full object-contain" playsinline="" controlslist="nodownload" loop="" src="https://scontent.xx.fbcdn.net/v/...mp4?..."></video>'
+        ></textarea>
+        <div class="drawer-actions">
+          <button id="parseHtmlBtn" class="btn btn-accent btn-sm">Add to Video List</button>
+          <button id="loadSampleBtn" class="btn btn-ghost btn-sm" title="Insert the sample Meta.ai <video> tag">Insert Meta.ai Sample</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 1. Destination Folder & Save Mode Card -->
+    <section class="settings-card">
+      <div class="section-header">
+        <span class="section-title">1. Destination Folder</span>
+        <button id="toggleAdvancedBtn" class="btn-link">⚙️ Queue Options</button>
+      </div>
+
+      <div class="save-mode-tabs">
+        <label class="mode-tab">
+          <input type="radio" name="saveMode" value="folder_picker" checked />
+          <span>📁 Choose Any Folder (Direct Disk)</span>
+        </label>
+        <label class="mode-tab">
+          <input type="radio" name="saveMode" value="subfolder" />
+          <span>📥 Downloads Subfolder</span>
+        </label>
+      </div>
+
+      <!-- Mode A: Native OS Directory Picker -->
+      <div id="folderPickerPanel" class="folder-panel">
+        <div class="folder-display" id="selectedFolderBox">
+          <span class="folder-icon">📂</span>
+          <div class="folder-info">
+            <span id="folderNameText" class="folder-name">No folder selected yet</span>
+            <span id="folderPermText" class="folder-sub">Click "Select Folder" to pick where files are saved</span>
+          </div>
+        </div>
+        <button id="pickFolderBtn" class="btn btn-accent">Select Folder...</button>
+      </div>
+
+      <!-- Mode B: Chrome Downloads Subfolder -->
+      <div id="subfolderPanel" class="folder-panel hidden">
+        <div class="subfolder-input-group">
+          <span class="subfolder-prefix">Downloads /</span>
+          <input
+            type="text"
+            id="subfolderInput"
+            value="Meta_AI_Videos"
+            placeholder="Meta_AI_Videos"
+          />
+        </div>
+      </div>
+
+      <!-- Collapsible Advanced Queue Settings -->
+      <div id="advancedSettingsPanel" class="advanced-settings hidden">
+        <div class="settings-grid">
+          <div class="field-group">
+            <label for="conflictActionSelect">If File Already Exists</label>
+            <select id="conflictActionSelect">
+              <option value="uniquify">Auto-Rename (file (1).mp4)</option>
+              <option value="skip">Skip Existing File</option>
+              <option value="overwrite">Overwrite File</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="delayMsInput">Queue Delay (ms)</label>
+            <input type="number" id="delayMsInput" value="500" min="0" max="10000" step="100" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Auto New Name All Selected (Order Number Top -> Bottom) -->
+    <section class="rename-card">
+      <div class="section-header">
+        <span class="section-title">2. Auto-Rename Selected (Top → Bottom Order)</span>
+        <label class="auto-sync-label" title="Automatically re-number selected files from top to bottom whenever selection changes">
+          <input type="checkbox" id="autoSyncOrderCheckbox" />
+          <span>Auto-renumber on select</span>
+        </label>
+      </div>
+
+      <div class="rename-controls-row">
+        <div class="rename-field rename-prefix-col">
+          <label for="autoNamePrefixInput">New Base Name</label>
+          <input
+            type="text"
+            id="autoNamePrefixInput"
+            value="clip"
+            placeholder="e.g. clip, scene"
+          />
+        </div>
+
+        <div class="rename-field rename-format-col">
+          <label for="autoNameFormatSelect">Order Format</label>
+          <select id="autoNameFormatSelect">
+            <option value="prefix_num">{name}_{num}.mp4 (clip_01.mp4)</option>
+            <option value="num_prefix">{num}_{name}.mp4 (01_clip.mp4)</option>
+            <option value="num_only">{num}.mp4 (01.mp4)</option>
+            <option value="num_original">{num}_{original} (01_90204...mp4)</option>
+          </select>
+        </div>
+
+        <div class="rename-field rename-start-col">
+          <label for="autoNameStartInput">Start #</label>
+          <input type="number" id="autoNameStartInput" value="1" min="0" max="9999" />
+        </div>
+
+        <div class="rename-field rename-pad-col">
+          <label for="autoNamePadSelect">Digits</label>
+          <select id="autoNamePadSelect">
+            <option value="2" selected>01</option>
+            <option value="3">001</option>
+            <option value="1">1</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="rename-actions-row">
+        <button id="applyAutoNameBtn" class="btn btn-accent btn-sm btn-block" title="Rename all selected clips in order from top to bottom">
+          ✨ Auto New Name All Selected (Top → Bottom)
+        </button>
+        <button id="resetAllNamesBtn" class="btn btn-ghost btn-sm" title="Restore original .mp4 filenames for all clips">
+          ↺ Reset Names
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. Selection & Filter Toolbar (Select All / Deselect All + View Filters) -->
+    <section class="selection-toolbar">
+      <div class="toolbar-top">
+        <div class="selection-buttons">
+          <label class="master-select-label" title="Toggle Select All / Deselect All in current view">
+            <input type="checkbox" id="masterSelectCheckbox" />
+            <span>All</span>
+          </label>
+          <button id="selectAllBtn" class="btn btn-xs btn-select-action" title="Select all clips in current view">
+            ☑ Select All
+          </button>
+          <button id="selectNoneBtn" class="btn btn-xs btn-select-action" title="Deselect all clips in current view">
+            ☐ Deselect All
+          </button>
+          <button id="selectInvertBtn" class="btn btn-xs" title="Invert selection">
+            ⇄ Invert
+          </button>
+          <button id="selectPendingBtn" class="btn btn-xs" title="Select only clips not yet downloaded">
+            ⏳ Select New
+          </button>
+        </div>
+        <div class="selection-stats">
+          <span>Found: <strong id="totalCountText">0</strong></span>
+          <span>•</span>
+          <span>Selected: <strong id="selectedCountText" class="highlight-num">0</strong></span>
+          <span>•</span>
+          <span>Done: <strong id="completedCountText" class="success-num">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Filter Pills Bar: Show specific files in the list -->
+      <div class="filter-pills-bar" id="filterPillsBar" role="tablist" aria-label="Filter files in list">
+        <button class="filter-pill active" data-filter="all">
+          All <span class="pill-count" id="filterCountAll">0</span>
+        </button>
+        <button class="filter-pill" data-filter="selected">
+          Selected <span class="pill-count" id="filterCountSelected">0</span>
+        </button>
+        <button class="filter-pill" data-filter="unselected">
+          Unselected <span class="pill-count" id="filterCountUnselected">0</span>
+        </button>
+        <button class="filter-pill" data-filter="pending">
+          Pending / New <span class="pill-count" id="filterCountPending">0</span>
+        </button>
+        <button class="filter-pill" data-filter="downloaded">
+          Downloaded / History <span class="pill-count" id="filterCountDownloaded">0</span>
+        </button>
+        <button class="filter-pill" data-filter="renamed">
+          Renamed <span class="pill-count" id="filterCountRenamed">0</span>
+        </button>
+        <button class="filter-pill" data-filter="failed">
+          Failed <span class="pill-count" id="filterCountFailed">0</span>
+        </button>
+      </div>
+
+      <div class="toolbar-bottom">
+        <input
+          type="search"
+          id="searchFilterInput"
+          class="search-input"
+          placeholder="Search files by name, custom name, or ID..."
+        />
+        <button id="clearHistoryBtn" class="btn btn-xs" title="Clear saved download history in Local Storage">
+          🕒 Clear History
+        </button>
+        <button id="clearListBtn" class="btn btn-xs btn-danger-ghost" title="Clear current video list">
+          🗑️ Clear List
+        </button>
+      </div>
+    </section>
+
+    <!-- Scrollable Video List -->
+    <main id="videoListContainer" class="video-list">
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">🎬</div>
+        <h2 id="emptyStateTitle">No .mp4 videos detected yet</h2>
+        <p id="emptyStateDesc">
+          Open <strong>meta.ai</strong> and click <strong>Scan Page HTML</strong>, scroll through your video feed, or click <strong>Paste HTML</strong> to extract <code>.mp4</code> links.
+        </p>
+      </div>
+    </main>
+
+    <!-- Sticky Auto-Download Queue Footer -->
+    <footer class="queue-footer">
+      <div class="queue-progress-Info">
+        <span id="queueStatusLabel" class="queue-status-text">Queue Idle — Select videos to start</span>
+        <span id="queueCounterLabel" class="queue-counter-text">0 / 0</span>
+      </div>
+      <div class="progress-track">
+        <div id="overallProgressBar" class="progress-fill" style="width: 0%"></div>
+      </div>
+
+      <div class="queue-controls">
+        <button id="startQueueBtn" class="btn btn-success btn-block">
+          ▶ Start Auto Queue (File by File)
+        </button>
+        <button id="pauseQueueBtn" class="btn btn-warning hidden">⏸ Pause</button>
+        <button id="resumeQueueBtn" class="btn btn-success hidden">▶ Resume</button>
+        <button id="skipCurrentBtn" class="btn btn-secondary hidden" title="Skip current downloading file">⏭ Skip</button>
+        <button id="stopQueueBtn" class="btn btn-danger hidden">⏹ Stop</button>
+        <button id="retryFailedBtn" class="btn btn-accent hidden">🔄 Retry Failed</button>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>

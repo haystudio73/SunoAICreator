@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock Meta.AI Feed — Extension Test Page</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0b0f19;
+      color: #f1f5f9;
+      padding: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    button {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .card h3 {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #38bdf8;
+    }
+    video {
+      width: 100%;
+      height: 180px;
+      background: #000;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <h1>Meta.AI Video Feed Simulation</h1>
+  <p>Use this page to test the <strong>Meta.AI Video Downloader</strong> Chrome Extension (DOM scanner, MutationObserver, Locate highlight, and Auto Queue).</p>
+
+  <div class="controls">
+    <button id="addDynamicVideoBtn">+ Simulate Infinite Scroll (Mount New Meta.AI &lt;video&gt;)</button>
+  </div>
+
+  <div class="video-grid" id="videoGrid">
+    <!-- Card 1: Exact HTML element provided in prompt -->
+    <div class="card">
+      <h3>1. Target Meta.AI Video (scontent.xx.fbcdn.net)</h3>
+      <video class="h-full w-full object-contain" playsinline="" controlslist="nodownload" loop="" src="https://scontent.xx.fbcdn.net/v/t39.105495-1/902044508_1849482556051902_4641685168229180870_n.mp4?_nc_ht=scontent.xx.fbcdn.net&amp;_nc_cat=106&amp;_nc_ohc=-pAZN6jli1EQ7kNvwHULcyB&amp;sdl=0&amp;ccb=14-4&amp;oh=00_AQTto52-DZkV6zT_n-5LCEhlqzaJTfq0MH3yZ_Hl4WcRHg&amp;oe=6AF9E9F0&amp;_nc_sid=a21977"></video>
+    </div>
+
+    <!-- Card 2: Second simulated Meta.AI fbcdn.net video -->
+    <div class="card">
+      <h3>2. Meta.AI Generation #2 (scontent.xx.fbcdn.net)</h3>
+      <video class="h-full w-full object-contain" playsinline="" controlslist="nodownload" loop="" src="https://scontent.xx.fbcdn.net/v/t39.105495-1/905112345_2948172635192837_8817263541928374651_n.mp4?_nc_ht=scontent.xx.fbcdn.net&amp;_nc_cat=106&amp;_nc_ohc=AbCdEfGhIjK&amp;sdl=0&amp;ccb=14-4&amp;oh=00_AQSampleToken2&amp;oe=6AF9E9F0&amp;_nc_sid=a21977"></video>
+    </div>
+
+    <!-- Card 3: Live Sample MP4 for testing real disk stream downloads -->
+    <div class="card">
+      <h3>3. Live Streamable Sample MP4 (W3C Sample)</h3>
+      <video class="h-full w-full object-contain" playsinline="" controlslist="nodownload" loop="" controls src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+    </div>
+  </div>
+
+  <script>
+    let counter = 4;
+    document.getElementById('addDynamicVideoBtn').addEventListener('click', () => {
+      const grid = document.getElementById('videoGrid');
+      const randomId = `${900000000 + counter}_${1849482556051900 + counter}_${4641685168229180000 + counter}_n.mp4`;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <h3>${counter}. Dynamically Mounted Video (${randomId})</h3>
+        <video class="h-full w-full object-contain" playsinline="" controlslist="nodownload" loop="" src="https://scontent.xx.fbcdn.net/v/t39.105495-1/${randomId}?_nc_ht=scontent.xx.fbcdn.net&amp;_nc_cat=106&amp;_nc_ohc=-pAZN6jli1EQ7kNvwHULcyB&amp;sdl=0&amp;ccb=14-4&amp;oh=00_AQTto52-DZkV6zT_n-5LCEhlqzaJTfq0MH3yZ_Hl4WcRHg&amp;oe=6AF9E9F0&amp;_nc_sid=a21977"></video>
+      `;
+      grid.appendChild(card);
+      counter++;
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "Meta.AI Video Downloader — Bulk & Auto Queue",
+  "version": "1.0.0",
+  "description": "Read Meta.AI HTML source to extract .mp4 video links, select videos, choose a save folder, and auto-download file by file.",
+  "permissions": [
+    "sidePanel",
+    "downloads",
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://*.meta.ai/*",
+    "*://*.fbcdn.net/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "action": {
+    "default_title": "Open Meta.AI Video Downloader",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.meta.ai/*"
+      ],
+      "js": [
+        "src/content/content-scanner.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
+
